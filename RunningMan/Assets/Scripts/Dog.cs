@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Tilemaps;
+using System.Collections;
 
 public class Dog : MonoBehaviour
 {
@@ -31,6 +32,10 @@ public class Dog : MonoBehaviour
     [Header("遺失血量")]
     public float lose;
 
+    public GameObject final;
+    public Text textD, textC, textTime, textTotal;
+    public int scoreD, scoreC, scoreTime, scoreTotal,finalTime;
+
 
     public AudioClip jumpSound, slideSound;  //音效
     public Color damageColor;                //受傷的顏色
@@ -58,6 +63,7 @@ public class Dog : MonoBehaviour
         sr = GetComponent<SpriteRenderer>();
 
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();  //搜尋主相機的座標
+        
     }
 
     // 依照巾貞數 執行N次
@@ -65,6 +71,7 @@ public class Dog : MonoBehaviour
     {
         Run();
         LoseHp();
+        //scoreTime += (int)Time.timeScale;
     }
 
     void Run()
@@ -73,12 +80,14 @@ public class Dog : MonoBehaviour
         cam.Translate(speed * Time.deltaTime, 0, 0);
         //人物移動
         transform.Translate(speed * Time.deltaTime, 0,0);
-        
+        //scoreTime = DateTime.Now.Second
     }
 
     //跳躍方法
     public void Jump()
     {
+        if (hp <= 0) return;
+
         if (isGround == true)
         {
             anim.SetBool("跳躍開關", true);
@@ -92,9 +101,11 @@ public class Dog : MonoBehaviour
     //滑行方法 膠囊體變小
     public void Slide()
     {
+        if (hp <= 0) return;
+
         anim.SetBool("滑行開關",true);
         cc2d.offset = new Vector2(-0.095f,-0.98f);
-        cc2d.size = new Vector2(0.8f,1.1f);
+        cc2d.size = new Vector2(0.8f,.5f);
         as2d.PlayOneShot(slideSound, 1f);
     }
 
@@ -121,11 +132,13 @@ public class Dog : MonoBehaviour
     {
         Debug.Log("受傷!");
         //sr.enabled = false;
-        sr.color = damageColor;       //變成受傷方法
+        sr.color = damageColor;       //變成受傷顏色
         Invoke("ShowRenderer",0.3f);  //0.3秒後變回正常
 
         hp -= damageX;
         hpBar.fillAmount = hp / maxHp;
+
+        Dead();
     }
 
     //碰到地板時發生的事情   isTrigger要關閉(不會穿透)
@@ -158,6 +171,12 @@ public class Dog : MonoBehaviour
             countDiamond++;
             textDiamond.text = countDiamond+"";
         }
+
+        if (collision.name == "死亡區域")
+        {
+            hp = 0;
+            Dead();
+        }
     }
 
     private void EatCherry(Collision2D collision)
@@ -186,5 +205,78 @@ public class Dog : MonoBehaviour
     {
         hp -= Time.deltaTime * lose;
         hpBar.fillAmount = hp / maxHp;
+
+        Dead();
     }
+
+    private void Dead()
+    {
+        if (hp <= 0)
+        {
+            speed = 0;
+            anim.SetBool("死亡開關",true);
+
+            SetFinal();
+        }
+    }
+
+    private void SetFinal()
+    {
+        if (final.activeInHierarchy == false)
+        {
+            final.SetActive(true);
+
+            /*textD.text = scoreD + "";
+            textC.text = scoreC + "";
+            textTime.text = scoreTime + "";
+            textTotal.text = (scoreD + scoreC + scoreTime) + "";*/
+
+            finalTime = (int)Time.time;
+
+            StartCoroutine(FinalTime( countDiamond, scoreD, 100, textD, .1f));
+            StartCoroutine(FinalTime( countCherry, scoreC,  50, textC, .1f,countDiamond * 0.2f));
+            StartCoroutine(FinalTime( finalTime, scoreTime, 20, textTime, .1f,(countDiamond+countCherry) *0.2f));
+        }
+    }
+
+    //float wait=0 是預設值用法  如果呼叫的方法不給該值 則是給予設定的預設值  且此用法參數要擺在後面
+    private IEnumerator FinalTime(int count, int finalScore, int score,Text text,float second,float wait=0)
+    {
+        yield return new WaitForSeconds(wait);
+
+        while (count > 0)
+        {
+            count--;
+            finalScore += score;
+            text.text = finalScore + "";
+            yield return new WaitForSeconds(second);
+        }
+    }
+
+    /*private IEnumerator FinalTime()
+    {
+        while (countDiamond > 0)
+        {
+            countDiamond--;
+            scoreD += 100;
+            textD.text = scoreD + "";
+            yield return new WaitForSeconds(.1f);
+        }
+
+        while (countCherry > 0)
+        {
+            countCherry--;
+            scoreC += 100;
+            textC.text = scoreC + "";
+            yield return new WaitForSeconds(.1f);
+        }
+
+        while (finalTime > 0)
+        {
+            finalTime--;
+            scoreTime += 20;
+            textTime.text = scoreTime + "";
+            yield return new WaitForSeconds(.1f);
+        }
+    }*/
 }
