@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Tilemaps;
 
 public class Dog : MonoBehaviour
 {
@@ -21,6 +22,14 @@ public class Dog : MonoBehaviour
     public Image hpBar;
     [Header("障礙物傷害值")]
     public float damageX = 20f;
+    [Header("鑽石")]
+    public int countDiamond;
+    public Text textDiamond;
+    [Header("櫻桃")]
+    public int countCherry;
+    public Text textCherry;
+    [Header("遺失血量")]
+    public float lose;
 
 
     public AudioClip jumpSound, slideSound;  //音效
@@ -54,10 +63,11 @@ public class Dog : MonoBehaviour
     // 依照巾貞數 執行N次
     void Update()
     {
-        run();
+        Run();
+        LoseHp();
     }
 
-    void run()
+    void Run()
     {
         //鏡頭移動
         cam.Translate(speed * Time.deltaTime, 0, 0);
@@ -67,7 +77,7 @@ public class Dog : MonoBehaviour
     }
 
     //跳躍方法
-    public void jump()
+    public void Jump()
     {
         if (isGround == true)
         {
@@ -80,7 +90,7 @@ public class Dog : MonoBehaviour
     }
 
     //滑行方法 膠囊體變小
-    public void slide()
+    public void Slide()
     {
         anim.SetBool("滑行開關",true);
         cc2d.offset = new Vector2(-0.095f,-0.98f);
@@ -125,6 +135,13 @@ public class Dog : MonoBehaviour
         {
             isGround = true;
         }
+
+        if (collision.gameObject.name == "道具")
+        {
+            EatCherry(collision);
+            countCherry++;
+            textCherry.text = countCherry+"";
+        }
     }
 
     //碰到障礙物時 發生的事情  isTrigger要打開(會穿透)
@@ -134,5 +151,40 @@ public class Dog : MonoBehaviour
         {
             Damage();
         }
+
+        if (collision.tag == "鑽石")
+        {
+            EatDiamond(collision);
+            countDiamond++;
+            textDiamond.text = countDiamond+"";
+        }
+    }
+
+    private void EatCherry(Collision2D collision)
+    {
+        Tilemap tilemap = collision.gameObject.GetComponent<Tilemap>();
+
+        //給一個空的 Vector3
+        Vector3 hitPos = Vector3.zero;
+        //抓取碰到櫻桃的點
+        ContactPoint2D hit = collision.contacts[0];
+
+        //將碰到的點的X及Y  除100  取得物件中心點
+        hitPos.x = hit.point.x - 0.01f * hit.normal.x;
+        hitPos.y = hit.point.y - 0.01f * hit.normal.y;
+
+        //將中心點放入偵測物件  將碰到的物件變成空的
+        tilemap.SetTile(tilemap.WorldToCell(hitPos),null);
+    }
+
+    private void EatDiamond(Collider2D collision)
+    {
+        Destroy(collision.gameObject);
+    }
+
+    private void LoseHp()
+    {
+        hp -= Time.deltaTime * lose;
+        hpBar.fillAmount = hp / maxHp;
     }
 }
