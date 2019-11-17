@@ -1,0 +1,16 @@
+{
+"companyName": "ASO",
+"productName": "DOG RUN",
+"productVersion": "0.1",
+"dataUrl": "DOGRUN.data.unityweb",
+"wasmCodeUrl": "DOGRUN.wasm.code.unityweb",
+"wasmFrameworkUrl": "DOGRUN.wasm.framework.unityweb",
+"graphicsAPI": ["WebGL 2.0","WebGL 1.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"splashScreenStyle": "Dark",
+"backgroundColor": "#231F20",
+"cacheControl": {"default": "must-revalidate"},
+"developmentBuild": false,
+"multithreading": false,
+"unityVersion": "2019.2.4f1"
+}

@@ -34,7 +34,9 @@ public class Dog : MonoBehaviour
 
     public GameObject final;
     public Text textD, textC, textTime, textTotal;
-    public int scoreD, scoreC, scoreTime, scoreTotal,finalTime;
+    //public int scoreD, scoreC, scoreTime, scoreTotal,finalTime;
+    public int finalTime;
+    public int[] scores = new int[4];
 
 
     public AudioClip jumpSound, slideSound;  //音效
@@ -181,6 +183,10 @@ public class Dog : MonoBehaviour
 
     private void EatCherry(Collision2D collision)
     {
+
+        hp += 50;
+        hpBar.fillAmount = hp / maxHp;
+
         Tilemap tilemap = collision.gameObject.GetComponent<Tilemap>();
 
         //給一個空的 Vector3
@@ -225,31 +231,37 @@ public class Dog : MonoBehaviour
         if (final.activeInHierarchy == false)
         {
             final.SetActive(true);
+            
+            finalTime = (int)Time.timeSinceLevelLoad;
 
-            /*textD.text = scoreD + "";
-            textC.text = scoreC + "";
-            textTime.text = scoreTime + "";
-            textTotal.text = (scoreD + scoreC + scoreTime) + "";*/
-
-            finalTime = (int)Time.time;
-
-            StartCoroutine(FinalTime( countDiamond, scoreD, 100, textD, .1f));
-            StartCoroutine(FinalTime( countCherry, scoreC,  50, textC, .1f,countDiamond * 0.2f));
-            StartCoroutine(FinalTime( finalTime, scoreTime, 20, textTime, .1f,(countDiamond+countCherry) *0.2f));
+            StartCoroutine(FinalTime( countDiamond, 0, 100, textD, .1f));
+            StartCoroutine(FinalTime( countCherry, 1,  50, textC, .1f,countDiamond * 0.1f));
+            StartCoroutine(FinalTime( finalTime, 2, 20, textTime, .05f,(countDiamond+countCherry) *0.1f));
         }
     }
 
     //float wait=0 是預設值用法  如果呼叫的方法不給該值 則是給予設定的預設值  且此用法參數要擺在後面
-    private IEnumerator FinalTime(int count, int finalScore, int score,Text text,float second,float wait=0)
+    //第一個參數 是櫻桃/鑽石/時間的數量  第二個參數是分數要放的陣列   第三個參數是一個櫻桃/鑽石/時間的分數  第四個參數是Text 
+    //第五個參數是 一個分數中跳分數的間隔時間   第六個參數是 第一個分數跳完 要到下個分數的間隔時間
+    private IEnumerator FinalTime(int count, int scoreIndex, int score,Text text,float second,float wait=0)
     {
         yield return new WaitForSeconds(wait);
 
         while (count > 0)
         {
             count--;
-            finalScore += score;
-            text.text = finalScore + "";
+            scores[scoreIndex] += score;
+            text.text = scores[scoreIndex] + "";
             yield return new WaitForSeconds(second);
+        }
+
+        //如果索引值 不是3  將值傳到索引值3裡面
+        if(scoreIndex != 3 ) scores[3]+=scores[scoreIndex];
+        //如果索引值到2的時候  準備進行索引3的行為
+        if(scoreIndex == 2){
+        int total = scores[3] / 10;
+        scores[3] = 0;
+        StartCoroutine(FinalTime( total, 3, 10, textTotal, .01f,0.1f));
         }
     }
 
